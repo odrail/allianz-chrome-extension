@@ -7,18 +7,22 @@ const mapToDataChart = (dettaglioContributi: DettaglioContributo[]): DataChart[]
       {
         label: 'Contributi',
         values: dettaglioContributi
-          .reduce<Value[]>((acc, dc) => {
+          .reduce<Value[]>((acc, dc, i) => {
             const totalNetContributions = acc.length > 0 ? acc[acc.length - 1].netContribution : 0
             const value: Value = {
               date: dc.dataCompetenza,
               netContribution: totalNetContributions + dc.importo
             }
-            return [
-              ...acc,
-              value
-            ]
+            if ( i === 0 || acc[acc.length -1] && acc[acc.length -1].date.getTime() !== dc.dataCompetenza.getTime()) {
+              acc = [
+                ...acc,
+                value
+              ]
+            } else {
+              acc[acc.length -1] = value
+            }
+            return acc
           }, [])
-          
       }
     ]
   }
