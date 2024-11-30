@@ -1,6 +1,7 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import LineChart, { DataChart, Value } from "./components/LineChart"
 import getDettaglioContributi, { DettaglioContributo } from "./services/getDettaglioContributi"
+import useCookie from "./hooks/useCookie"
 
 const mapToDataChart = (dettaglioContributi: DettaglioContributo[]): DataChart[] => {
     return [
@@ -29,17 +30,15 @@ const mapToDataChart = (dettaglioContributi: DettaglioContributo[]): DataChart[]
 
 const App = () => {
   const [data, setData] = useState<DataChart[]>([])
+  const cookie = useCookie()
 
-  chrome.runtime.onMessage.addListener(
-      async function(request: Record<string, string>) {
-        const cookieStr: string = Object.entries(request)
-          .reduce<string>((acc, [key, value])=> {
-            return `${acc}; ${key}=${value}`
-          }, '')
-        const dettaglioContributi = await getDettaglioContributi(cookieStr)
-        setData(mapToDataChart(dettaglioContributi))
-      }
-    );
+  useEffect(() => {
+    const fetchData = async () => {
+      const dettaglioContributi = await getDettaglioContributi(cookie)
+      setData(mapToDataChart(dettaglioContributi))
+    }
+    fetchData()
+  })
     
   return (
     <LineChart data={data}/>
