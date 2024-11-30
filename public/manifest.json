@@ -1,0 +1,30 @@
+{
+    "manifest_version": 3,
+    "name": "Hello Extensions of the world!",
+    "description": "Base Level Extension",
+    "version": "1.0",
+    "action": {
+      "default_popup": "general/index.html",
+      "default_icon": "general/assets/popup/hello_extensions.png"
+    },
+    "content_scripts": [
+        {
+            "js": ["scripts/dettaglioContributi.js"],
+            "matches": [
+                "https://previdenzacomplementare.allianz.it/UnifondiRASNP/priv/actionMenuLeft.do?method=dettaglioContributi",
+                "https://previdenzacomplementare.allianz.it/UnifondiRASNP/is/actionIsDettaglioContributiInit.do"
+            ]
+        }
+    ],
+    "background": {
+        "service_worker": "general/assets/background.js",
+        "type": "module"
+    },
+    "permissions": [
+        "webRequest",
+        "cookies"
+    ],
+    "host_permissions": [
+        "*://*.allianz.it/"
+    ]
+  }
