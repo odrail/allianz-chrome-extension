@@ -11,8 +11,10 @@ import {
   ChartDataset,
   ChartData,
   Point,
+  ChartOptions,
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
+import formatCurrency from '../../utils/formatCurrency';
 
 export type DataChart = {
   label: string;
@@ -41,7 +43,7 @@ ChartJS.register(
 
 const formatDate = (date: Date): string => `${date.getDate().toString().padStart(2, '0')}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getFullYear()}` 
 
-const options = {
+const options: ChartOptions<'line'> = {
   responsive: true,
   plugins: {
     legend: {
@@ -50,7 +52,19 @@ const options = {
     title: {
       display: false
     },
+    tooltip: {
+      callbacks: {
+          label: context => `${context.dataset.label}: ${formatCurrency(context.parsed.y)}`
+      }
+    },
   },
+  scales: {
+    y: {
+      ticks: {
+        callback: value => formatCurrency(parseFloat(value.toString()))
+      }
+    }
+  }
 };
 
 const getLabels = (dataCharts: DataChart[]): string[] => {
