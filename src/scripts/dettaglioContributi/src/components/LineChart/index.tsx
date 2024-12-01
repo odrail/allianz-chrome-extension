@@ -16,19 +16,19 @@ import {
 import { Line } from 'react-chartjs-2';
 import formatCurrency from '../../utils/formatCurrency';
 
+export type Dataset = {
+  label: string
+  color: string
+  values:  number[]
+}
+
 export type DataChart = {
-  label: string;
-  values:  Value[];
+  labels: string[],
+  datasets: Dataset[]
 }
-
-export type Value = {
-  date: Date;
-  netContribution: number;
-}
-
 
 type LineChartProps = {
-  data: DataChart[]
+  data: DataChart
 }
 
 ChartJS.register(
@@ -40,8 +40,6 @@ ChartJS.register(
   Tooltip,
   Legend
 );
-
-const formatDate = (date: Date): string => `${date.getDate().toString().padStart(2, '0')}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getFullYear()}` 
 
 const options: ChartOptions<'line'> = {
   responsive: true,
@@ -67,33 +65,24 @@ const options: ChartOptions<'line'> = {
   }
 };
 
-const getLabels = (dataCharts: DataChart[]): string[] => {
-  return dataCharts.reduce<string[]>((acc, dataChart) => {
-    return [
-      ...acc,
-      ...dataChart.values.map(v => formatDate(v.date))
-    ]
-  }, [])
-}
-
-const getDataset = ({label, data}: {label: string, data: DataChart}): ChartDataset<"line"> => {
+const getDataset = ({label, data}: {label: string, data: Dataset}): ChartDataset<"line"> => {
   return {
     label,
-    data: data.values.map(v => v.netContribution),
-    borderColor: '#0C479D',
-    backgroundColor: '#0C479D',
+    data: data.values,
+    borderColor: data.color,
+    backgroundColor: data.color,
   }
 }
 
-const buildChartData = (dataCharts: DataChart[]): ChartData<"line", (number | Point | null)[], unknown> => {
-  const datasets = dataCharts.map(dataChart => 
+const buildChartData = (dataChart: DataChart): ChartData<"line", (number | Point | null)[], unknown> => {
+  const datasets = dataChart.datasets.map(dataChart => 
     getDataset({
       label: dataChart.label, 
       data: dataChart
     })
   )
   return {
-    labels: getLabels(dataCharts),
+    labels: dataChart.labels,
     datasets: datasets
   }
 };

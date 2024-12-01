@@ -1,6 +1,5 @@
-import { lightFormat, parse } from "date-fns";
+import { formatDate, parseDate } from "../utils/dateUtils";
 
-const formatDateString = 'dd/MM/yyyy'
 type Linea = "LINEA AZIONARIA"
 type Tipologia = "Volontario" | "Aziendale" | "Individuale" | "Tfr" | "Trasf. Aziend." | "Trasf. Ind." | "Trasf. Rend." | "Trasf. Tfr P."
 
@@ -15,10 +14,6 @@ export type DettaglioContributo = {
   numeroQuote: number;
   valoreQuota: number;
   commissioni: number;
-}
-
-const parseDate = (textContent: string): Date => {
-  return parse(textContent.trim(), formatDateString, new Date())
 }
 
 const parseString = <T = string>(textContent: string): T => {
@@ -65,8 +60,6 @@ const getDettaglioContributi = async (cookie: string): Promise<DettaglioContribu
   } while (!lastPage);
   return dettaglioContributi.reverse()
 }
-
-const formatDate = (date: Date) => lightFormat(date, formatDateString)
 
 const callActionIsDettaglioContributiInit = async (cookie: string, pageNumber: number = 1, dataIni: string = '01/01/1900'): Promise<Document> => {
   
