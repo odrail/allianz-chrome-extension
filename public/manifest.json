@@ -15,16 +15,5 @@
                 "https://previdenzacomplementare.allianz.it/UnifondiRASNP/is/actionIsDettaglioContributiInit.do"
             ]
         }
-    ],
-    "background": {
-        "service_worker": "general/assets/background.js",
-        "type": "module"
-    },
-    "permissions": [
-        "webRequest",
-        "cookies"
-    ],
-    "host_permissions": [
-        "*://*.allianz.it/"
     ]
   }

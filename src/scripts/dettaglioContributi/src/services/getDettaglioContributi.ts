@@ -48,20 +48,20 @@ const parseTable = (document: Document): DettaglioContributo[] => {
 const isLastPage = (document: Document): boolean => 
   document.querySelector('table[width="40%"] td:last-child')!.children.length === 0
 
-const getDettaglioContributi = async (cookie: string): Promise<DettaglioContributo[]> => {
+const getDettaglioContributi = async (): Promise<DettaglioContributo[]> => {
   const dettaglioContributi: DettaglioContributo[] = []
   let pageNumber = 0
   let lastPage = false
   do {
     pageNumber++
-    const document = await callActionIsDettaglioContributiInit(cookie, pageNumber)
+    const document = await callActionIsDettaglioContributiInit(pageNumber)
     dettaglioContributi.push(...parseTable(document))
     lastPage = isLastPage(document)
   } while (!lastPage);
   return dettaglioContributi.reverse()
 }
 
-const callActionIsDettaglioContributiInit = async (cookie: string, pageNumber: number = 1, dataIni: string = '01/01/1900'): Promise<Document> => {
+const callActionIsDettaglioContributiInit = async (pageNumber: number = 1, dataIni: string = '01/01/1900'): Promise<Document> => {
   
 const parser = new DOMParser();
   const bodyRequest = new URLSearchParams({
@@ -78,7 +78,6 @@ const parser = new DOMParser();
   })
   const resp = await fetch("https://previdenzacomplementare.allianz.it/UnifondiRASNP/is/actionIsDettaglioContributiInit.do", {
     "headers": {
-      cookie,
       "content-type": "application/x-www-form-urlencoded",
     },
     "body": bodyRequest,

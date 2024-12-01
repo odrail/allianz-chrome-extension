@@ -22,7 +22,6 @@ export default defineConfig({
     outDir: 'build/general',
     rollupOptions: {
       input: {
-        background: './src/background/index.ts',
         popup: './index.html',
       },
       output: {

@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react"
 import LineChart, { DataChart } from "./components/LineChart"
 import getDettaglioContributi, { DettaglioContributo } from "./services/getDettaglioContributi"
-import useCookie from "./hooks/useCookie"
 import { lineaAzionaria } from "./services/getHistoricalData"
 import { InvestmentData } from "investing-com-api"
 import { groupByDataValuta } from "./utils/dettaglioContributiUtils"
@@ -61,19 +60,18 @@ const mapToDataChart = (dettaglioContributi: DettaglioContributo[], historicalDa
 const App = () => {
   const [dettaglioContributi, setDettaglioContributi] = useState<DettaglioContributo[]>([])  
   const [historicalData, setHistoricalData] = useState<InvestmentData[]>([])
-  const cookie = useCookie()
   const data: DataChart = useMemo(() => mapToDataChart(dettaglioContributi, historicalData), [dettaglioContributi, historicalData])
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        setDettaglioContributi(await getDettaglioContributi(cookie))
+        setDettaglioContributi(await getDettaglioContributi())
       } catch {
         setDettaglioContributi([])
       }
     }
     fetchData()
-  }, [cookie])
+  }, [])
 
   useEffect(() => {
     const fetchData = async () => {
