@@ -5,13 +5,18 @@ import { lineaAzionaria } from "./services/getHistoricalData"
 import { InvestmentData } from "investing-com-api"
 import { groupByDataValuta } from "./utils/dettaglioContributiUtils"
 import { formatDate } from "./utils/dateUtils"
+import SelectPeriod, { Period } from "./components/SelectPeriod"
 
-const mapToDataChart = (dettaglioContributi: DettaglioContributo[], historicalData: InvestmentData[]): DataChart => {
+const mapToDataChart = (dettaglioContributi: DettaglioContributo[], historicalData: InvestmentData[], from: Date | undefined): DataChart => {
   const grouped = groupByDataValuta(dettaglioContributi)
+
   const dates = [
     ...grouped
-      .map(g => g.dataValuta),
-    ... historicalData.map(h => new Date(h.date))
+      .map(g => g.dataValuta)
+      .filter(hd => from ? hd.getTime() >= from.getTime() : true),
+    ... historicalData
+      .map(h => new Date(h.date))
+      .filter(hd => from ? hd.getTime() >= from.getTime() : true)
     ]
     .sort((a, b) => a.getTime() > b.getTime() ? 1 : -1)
   return {
@@ -22,13 +27,10 @@ const mapToDataChart = (dettaglioContributi: DettaglioContributo[], historicalDa
         label: 'Contributi',
         color: '#0C479D',
         values: dates
-          .reduce<number[]>((acc, date, index) => {
-            const importoPrecedente = index === 0 ? 0 : acc[index - 1]
-            const dcFound = grouped.find(g => g.dataValuta.getTime() === date.getTime())
-            const value = (dcFound?.importo || 0) + importoPrecedente
-            acc.push(value)
-            return acc
-          }, [])
+          .map<number>(date => grouped
+            .filter(g => g.dataValuta.getTime() <= date.getTime())
+            .reduce((acc, g) => acc+= g.importo, 0))
+          .slice(-dates.length)
       },
       {
         label: 'Controvalore',
@@ -52,6 +54,7 @@ const mapToDataChart = (dettaglioContributi: DettaglioContributo[], historicalDa
             }
             return acc
           }, [])
+          .slice(-dates.length)
       }
     ]
   }
@@ -60,7 +63,8 @@ const mapToDataChart = (dettaglioContributi: DettaglioContributo[], historicalDa
 const App = () => {
   const [dettaglioContributi, setDettaglioContributi] = useState<DettaglioContributo[]>([])  
   const [historicalData, setHistoricalData] = useState<InvestmentData[]>([])
-  const data: DataChart = useMemo(() => mapToDataChart(dettaglioContributi, historicalData), [dettaglioContributi, historicalData])
+  const [from, setFrom] = useState<Date>()
+  const data: DataChart = useMemo(() => mapToDataChart(dettaglioContributi, historicalData, from), [dettaglioContributi, historicalData, from])
 
   useEffect(() => {
     const fetchData = async () => {
@@ -84,9 +88,18 @@ const App = () => {
     }
     fetchData()
   }, [dettaglioContributi])
+
+  const handleSelectPeriodClick = (period: Period) => {
+    setFrom(period.from)
+  }
     
   return (
-    <LineChart data={data} />
+    <>
+      <div style={{display: 'flex', justifyContent: 'flex-end', margin: '10px 0px 10px 0px'}}>
+        <SelectPeriod onClick={handleSelectPeriodClick}/>
+      </div>
+      <LineChart data={data} />
+    </>
   )
 }
 

@@ -1,11 +1,15 @@
-import { getHistoricalData } from 'investing-com-api'
+import { getHistoricalData, InvestmentData } from 'investing-com-api'
 
-// TODO linea azionaria da passare come parametro
-export const lineaAzionaria = async (from: Date, to: Date) => {
-    return getHistoricalData({
-        input: '1078584',
-        resolution: 'D',
-        from,
-        to
-      })
+const PAIR_ID_LINEA_AZIONARIA = '1078584'
+
+const callApi = (pairId: string, from: Date, to: Date): Promise<InvestmentData[]> => {
+  return getHistoricalData({
+    input: pairId,
+    resolution: 'D',
+    from,
+    to
+  })
 }
+
+export const lineaAzionaria = async (from: Date, to: Date): Promise<InvestmentData[]> =>
+  callApi(PAIR_ID_LINEA_AZIONARIA, from, to)

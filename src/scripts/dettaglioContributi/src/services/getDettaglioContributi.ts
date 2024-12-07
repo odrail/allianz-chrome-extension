@@ -61,7 +61,7 @@ const getDettaglioContributi = async (): Promise<DettaglioContributo[]> => {
   return dettaglioContributi.reverse()
 }
 
-const callActionIsDettaglioContributiInit = async (pageNumber: number = 1, dataIni: string = '01/01/1900'): Promise<Document> => {
+const callActionIsDettaglioContributiInit = async (pageNumber: number = 1): Promise<Document> => {
   
 const parser = new DOMParser();
   const bodyRequest = new URLSearchParams({
@@ -71,7 +71,7 @@ const parser = new DOMParser();
     methodParams: '',
     exportType: 'xls',
     tipoContributo: 'TUTTI',
-    dataIni,
+    dataIni: '01/01/1900',
     dataFin: formatDate(new Date()),
     raggruppamentoData: 'NESSUNO',
     raggruppamento: 'NESSUNO'
