@@ -3,6 +3,6 @@ const ITEur = new Intl.NumberFormat('it-IT', {
     currency: 'EUR',
   })
   
-  const formatCurrency = (value: number) => ITEur.format(value)
+const formatCurrency = (value: number) => ITEur.format(value)
 
-  export default formatCurrency
+export default formatCurrency

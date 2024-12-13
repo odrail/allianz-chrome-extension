@@ -1,13 +1,15 @@
 import { useEffect, useMemo, useState } from "react"
 import LineChart, { DataChart } from "./components/LineChart"
-import getDettaglioContributi, { DettaglioContributo } from "./services/getDettaglioContributi"
+import getDettaglioContributi, { DettaglioContributoCumulato } from "./services/getDettaglioContributi"
 import { lineaAzionaria } from "./services/getHistoricalData"
 import { InvestmentData } from "investing-com-api"
 import { groupByDataValuta } from "./utils/dettaglioContributiUtils"
 import { formatDate } from "./utils/dateUtils"
 import SelectPeriod, { Period } from "./components/SelectPeriod"
+import Summary from "./components/Summary"
+import { COLOR_AMOUNT, COLOR_CONTRIBUTION } from "./utils/constants"
 
-const mapToDataChart = (dettaglioContributi: DettaglioContributo[], historicalData: InvestmentData[], from: Date | undefined): DataChart => {
+const mapToDataChart = (dettaglioContributi: DettaglioContributoCumulato[], historicalData: InvestmentData[], from: Date | undefined): DataChart => {
   const grouped = groupByDataValuta(dettaglioContributi)
 
   const dates = [
@@ -25,7 +27,7 @@ const mapToDataChart = (dettaglioContributi: DettaglioContributo[], historicalDa
     datasets: [
       {
         label: 'Contributi',
-        color: '#0C479D',
+        color: COLOR_CONTRIBUTION,
         values: dates
           .map<number>(date => grouped
             .filter(g => g.dataValuta.getTime() <= date.getTime())
@@ -33,14 +35,14 @@ const mapToDataChart = (dettaglioContributi: DettaglioContributo[], historicalDa
           .slice(-dates.length)
       },
       {
-        label: 'Controvalore',
-        color: '#6FA515',
+        label: 'Montante',
+        color: COLOR_AMOUNT,
         values: dates
           .reduce<number[]>((acc, date) => {
             if (!historicalData || historicalData.length === 0) {
               acc.push(0)
             } else {
-              const dettaglioContributiFiltered: DettaglioContributo[] = grouped.filter(g => g.dataValuta.getTime() <= date.getTime())
+              const dettaglioContributiFiltered: DettaglioContributoCumulato[] = grouped.filter(g => g.dataValuta.getTime() <= date.getTime())
               const totQuote: number = dettaglioContributiFiltered.reduce((acc, g) => acc+= g.numeroQuote, 0)
               const historicalDataFiltered = historicalData.filter(historical => historical.date <= date.getTime())
               if (historicalDataFiltered.length === 0) {
@@ -61,7 +63,7 @@ const mapToDataChart = (dettaglioContributi: DettaglioContributo[], historicalDa
 }
 
 const App = () => {
-  const [dettaglioContributi, setDettaglioContributi] = useState<DettaglioContributo[]>([])  
+  const [dettaglioContributi, setDettaglioContributi] = useState<DettaglioContributoCumulato[]>([])  
   const [historicalData, setHistoricalData] = useState<InvestmentData[]>([])
   const [from, setFrom] = useState<Date>()
   const data: DataChart = useMemo(() => mapToDataChart(dettaglioContributi, historicalData, from), [dettaglioContributi, historicalData, from])
@@ -98,6 +100,7 @@ const App = () => {
       <div style={{display: 'flex', justifyContent: 'flex-end', margin: '10px 0px 10px 0px'}}>
         <SelectPeriod onClick={handleSelectPeriodClick}/>
       </div>
+      <Summary dettaglioContributi={dettaglioContributi} historicalData={historicalData}/>
       <LineChart data={data} />
     </>
   )

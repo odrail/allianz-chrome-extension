@@ -16,6 +16,12 @@ export type DettaglioContributo = {
   commissioni: number;
 }
 
+export interface DettaglioContributoCumulato extends DettaglioContributo {
+  importoCumulato: number,
+  numeroQuoteCumulate: number,
+  commissioniCumulate: number
+}
+
 const parseString = <T = string>(textContent: string): T => {
   return textContent.trim() as T
 }
@@ -48,7 +54,17 @@ const parseTable = (document: Document): DettaglioContributo[] => {
 const isLastPage = (document: Document): boolean => 
   document.querySelector('table[width="40%"] td:last-child')!.children.length === 0
 
-const getDettaglioContributi = async (): Promise<DettaglioContributo[]> => {
+const toDettaglioContributiCumulati = (acc: DettaglioContributoCumulato[], dettaglioContributo: DettaglioContributo, index: number): DettaglioContributoCumulato[] => {
+  acc.push({
+    ...dettaglioContributo,
+    importoCumulato: index === 0 ? dettaglioContributo.importo : (dettaglioContributo.importo + acc[index - 1].importoCumulato),
+    numeroQuoteCumulate: index === 0 ? dettaglioContributo.numeroQuote : (dettaglioContributo.numeroQuote + acc[index - 1].numeroQuoteCumulate),
+    commissioniCumulate: index === 0 ? dettaglioContributo.commissioni : (dettaglioContributo.commissioni + acc[index - 1].commissioniCumulate),
+  })
+  return acc
+}
+
+const getDettaglioContributi = async (): Promise<DettaglioContributoCumulato[]> => {
   const dettaglioContributi: DettaglioContributo[] = []
   let pageNumber = 0
   let lastPage = false
@@ -58,12 +74,13 @@ const getDettaglioContributi = async (): Promise<DettaglioContributo[]> => {
     dettaglioContributi.push(...parseTable(document))
     lastPage = isLastPage(document)
   } while (!lastPage);
-  return dettaglioContributi.reverse()
+  return dettaglioContributi
+    .reverse()
+    .reduce(toDettaglioContributiCumulati, [])
 }
 
 const callActionIsDettaglioContributiInit = async (pageNumber: number = 1): Promise<Document> => {
-  
-const parser = new DOMParser();
+  const parser = new DOMParser();
   const bodyRequest = new URLSearchParams({
     method: 'findPage',
     np: pageNumber.toString(),
