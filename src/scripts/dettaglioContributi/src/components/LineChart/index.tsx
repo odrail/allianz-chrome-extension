@@ -14,7 +14,7 @@ import {
   ChartOptions,
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
-import formatCurrency from '../../utils/formatCurrency';
+import { formatCurrency } from '../../utils/number';
 
 export type Dataset = {
   label: string

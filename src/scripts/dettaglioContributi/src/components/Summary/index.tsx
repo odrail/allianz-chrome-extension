@@ -1,6 +1,6 @@
 import React, { useMemo } from "react"
 import { DettaglioContributoCumulato } from "../../services/getDettaglioContributi"
-import formatCurrency from "../../utils/formatCurrency"
+import { formatCurrency, formatPercentage } from "../../utils/number"
 import { InvestmentData } from "investing-com-api"
 import { COLOR_AMOUNT, COLOR_CONTRIBUTION } from "../../utils/constants"
 
@@ -8,8 +8,6 @@ type SummaryProps = {
     dettaglioContributi: DettaglioContributoCumulato[]
     historicalData: InvestmentData[]
 }
-
-const formatPlusvalenza = (plusvalenza: number): string => `${plusvalenza >= 0 ? '+' : ''} ${formatCurrency(plusvalenza)}`
 
 const getGainStyle = (gain: number): React.CSSProperties => ({
     color: gain >= 0 ? COLOR_AMOUNT : 'rgb(217, 54, 87)', 
@@ -53,7 +51,16 @@ const Summary = ({ dettaglioContributi, historicalData }: SummaryProps): React.R
         return totQuote * quotazione
     }, [dettaglioContributi, historicalData])
 
-    const plusvalenza = useMemo(() => montante - totaleContributi, [montante, totaleContributi])
+    const timeWeightPercent: number = useMemo(() => {
+        if (historicalData.length === 0) return 0
+        const primaQuotazione = historicalData[0].price_close
+        const ultimaQuotazione = historicalData[historicalData.length - 1].price_close
+        return ultimaQuotazione / primaQuotazione - 1
+    }, [historicalData])    
+
+    const plusvalenza = useMemo(() => {
+        return montante && totaleContributi ? montante - totaleContributi : 0
+    }, [montante, totaleContributi])
 
     return (
         <div style={style.container}>
@@ -64,7 +71,8 @@ const Summary = ({ dettaglioContributi, historicalData }: SummaryProps): React.R
                 </div>
                 <div>{formatCurrency(montante)}</div>
                 <div style={getGainStyle(plusvalenza)}>
-                    {formatPlusvalenza(plusvalenza)}
+                    <span>{formatCurrency(plusvalenza, true)}</span>
+                    <span style={{marginLeft: '5px'}}>({formatPercentage(timeWeightPercent, true)})</span>                    
                 </div>
             </div>        
             <div>
