@@ -56,6 +56,10 @@ const options: ChartOptions<'line'> = {
       }
     },
   },
+  interaction: {
+    mode: 'index',
+    intersect: false,
+  },
   scales: {
     y: {
       ticks: {
@@ -71,6 +75,8 @@ const getDataset = ({label, data}: {label: string, data: Dataset}): ChartDataset
     data: data.values,
     borderColor: data.color,
     backgroundColor: data.color,
+    tension: 0.4,
+    pointRadius: 0
   }
 }
 

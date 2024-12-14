@@ -22,6 +22,8 @@ export interface DettaglioContributoCumulato extends DettaglioContributo {
   commissioniCumulate: number
 }
 
+let dettaglioContributiCached: DettaglioContributoCumulato[] | null = null
+
 const parseString = <T = string>(textContent: string): T => {
   return textContent.trim() as T
 }
@@ -65,6 +67,7 @@ const toDettaglioContributiCumulati = (acc: DettaglioContributoCumulato[], detta
 }
 
 const getDettaglioContributi = async (): Promise<DettaglioContributoCumulato[]> => {
+
   const dettaglioContributi: DettaglioContributo[] = []
   let pageNumber = 0
   let lastPage = false
@@ -74,9 +77,11 @@ const getDettaglioContributi = async (): Promise<DettaglioContributoCumulato[]> 
     dettaglioContributi.push(...parseTable(document))
     lastPage = isLastPage(document)
   } while (!lastPage);
-  return dettaglioContributi
+  dettaglioContributiCached = dettaglioContributi
     .reverse()
     .reduce(toDettaglioContributiCumulati, [])
+
+  return dettaglioContributiCached
 }
 
 const callActionIsDettaglioContributiInit = async (pageNumber: number = 1): Promise<Document> => {

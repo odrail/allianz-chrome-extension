@@ -3,8 +3,10 @@ import { DettaglioContributoCumulato } from "../../services/getDettaglioContribu
 import { formatCurrency, formatPercentage } from "../../utils/number"
 import { InvestmentData } from "investing-com-api"
 import { COLOR_AMOUNT, COLOR_CONTRIBUTION } from "../../utils/constants"
+import { closestIndexTo } from "date-fns"
 
 type SummaryProps = {
+    from: Date | undefined
     dettaglioContributi: DettaglioContributoCumulato[]
     historicalData: InvestmentData[]
 }
@@ -38,7 +40,7 @@ const Circle = ({color}: {color: string}): React.ReactNode => {
     return <span style={style}></span>
 }
 
-const Summary = ({ dettaglioContributi, historicalData }: SummaryProps): React.ReactNode => {
+const SummaryPosition = ({ from, dettaglioContributi, historicalData }: SummaryProps): React.ReactNode => {
     const totaleContributi: number = useMemo(() => {
         return dettaglioContributi.length > 0
             ? dettaglioContributi[dettaglioContributi.length - 1].importoCumulato
@@ -52,11 +54,12 @@ const Summary = ({ dettaglioContributi, historicalData }: SummaryProps): React.R
     }, [dettaglioContributi, historicalData])
 
     const timeWeightPercent: number = useMemo(() => {
-        if (historicalData.length === 0) return 0
-        const primaQuotazione = historicalData[0].price_close
+        if (historicalData.length === 0 || !from) return 0
+        const indexPrimaQuotazione = closestIndexTo(from, historicalData.map(h => h.date))
+        const primaQuotazione = historicalData[indexPrimaQuotazione!].price_close
         const ultimaQuotazione = historicalData[historicalData.length - 1].price_close
         return ultimaQuotazione / primaQuotazione - 1
-    }, [historicalData])    
+    }, [historicalData, from])    
 
     const plusvalenza = useMemo(() => {
         return montante && totaleContributi ? montante - totaleContributi : 0
@@ -86,4 +89,4 @@ const Summary = ({ dettaglioContributi, historicalData }: SummaryProps): React.R
     )
 }
 
-export default Summary
+export default SummaryPosition

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { set, sub } from "date-fns";
+import { MAX_FROM } from "../../utils/constants";
 
 export type Period = {
   label: string
@@ -22,32 +23,32 @@ const styles: Record<string, React.CSSProperties> = {
   }
 }
 
-const now = new Date()
+const today = set(new Date, { hours: 0, minutes: 0, seconds: 0, milliseconds: 0 })
 
 const periods: Period[] = [
   {
     label: '1M',
-    from: sub(now, { months: 1 }),
+    from: sub(today, { months: 1 }),
   },
   {
     label: '3M',
-    from: sub(now, { months: 3 }),
+    from: sub(today, { months: 3 }),
   },
   {
     label: '6M',
-    from: sub(now, { months: 6 }),
+    from: sub(today, { months: 6 }),
   },
   {
     label: '1A',
-    from: sub(now, { years: 1 }),
+    from: sub(today, { years: 1 }),
   },
   {
     label: `${new Date().getFullYear()}`,
-    from: set(now, { month: 0, date: 1, minutes: 0, seconds: 0, milliseconds: 0 }),
+    from: set(today, { month: 0, date: 1 }),
   },
   {
     label: 'MAX',
-    from: set(now, { year: 1900, month: 1, date: 1, minutes: 0, seconds: 0, milliseconds: 0 }),
+    from: MAX_FROM,
   }
 ]
 
