@@ -1,9 +1,10 @@
 import React, { useMemo } from "react"
 import { DettaglioContributoCumulato } from "../../services/getDettaglioContributi"
-import { formatCurrency, formatPercentage } from "../../utils/number"
+import { formatCurrency, formatPercentage } from "../../utils/numberUtils"
 import { InvestmentData } from "investing-com-api"
 import { COLOR_AMOUNT, COLOR_CONTRIBUTION } from "../../utils/constants"
 import { closestIndexTo } from "date-fns"
+import Circle from "../Circle"
 
 type SummaryProps = {
     from: Date | undefined
@@ -28,16 +29,6 @@ const style: Record<string, React.CSSProperties> = {
         display: 'flex',
         gap: '5px',
     }
-}
-
-const Circle = ({color}: {color: string}): React.ReactNode => {
-    const style: React.CSSProperties = {
-        width: '10px',
-        height: '10px',
-        backgroundColor: color,
-        borderRadius: '50%',
-    }
-    return <span style={style}></span>
 }
 
 const SummaryPosition = ({ from, dettaglioContributi, historicalData }: SummaryProps): React.ReactNode => {

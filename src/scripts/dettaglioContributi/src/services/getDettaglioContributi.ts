@@ -1,7 +1,24 @@
 import { formatDate, parseDate } from "../utils/dateUtils";
 
-type Linea = "LINEA AZIONARIA"
-type Tipologia = "Volontario" | "Aziendale" | "Individuale" | "Tfr" | "Trasf. Aziend." | "Trasf. Ind." | "Trasf. Rend." | "Trasf. Tfr P."
+enum Linea {
+  LINEA_FLESSIBILE_CON_GARANZIA_RESTITUZIONE_CAPITALE = "LINEA FLESSIBILE CON GARANZIA RESTITUZIONE CAPITALE",
+  LINEA_OBBLIGAZIONARIA = "LINEA OBBLIGAZIONARIA",
+  LINEA_BILANCIATA = "LINEA BILANCIATA",
+  LINEA_AZIONARIA = "LINEA AZIONARIA",
+  LINEA_OBBLIGAZIONARIA_BREVE_TERMINE = "LINEA OBBLIGAZIONARIA BREVE TERMINE",
+  LINEA_OBBLIGAZIONARIA_LUNGO_TERMINE = "LINEA OBBLIGAZIONARIA LUNGO TERMINE",
+}
+
+enum Tipologia {
+  VOLONTARIO = "Volontario",
+  AZIENDALE = "Aziendale",
+  INDIVIDUALE = "Individuale",
+  TFR = "Tfr",
+  TRASFERIMENTO_AZIENDALE = "Trasf. Aziend.",
+  TRASFERIMENTO_INDIVIDUALE = "Trasf. Ind.",
+  TRASFERIMENTO_RENDITA = "Trasf. Rend.",
+  TRASFERIMENTO_TFR_PREGRESSO = "Trasf. Tfr P.",
+}
 
 export type DettaglioContributo = {
   dataCompetenza: Date;
@@ -22,15 +39,11 @@ export interface DettaglioContributoCumulato extends DettaglioContributo {
   commissioniCumulate: number
 }
 
-let dettaglioContributiCached: DettaglioContributoCumulato[] | null = null
+const parseString = <T = string>(textContent: string): T =>
+  textContent.trim() as T
 
-const parseString = <T = string>(textContent: string): T => {
-  return textContent.trim() as T
-}
-
-const parseNumber = (textContent: string): number => {
-  return parseFloat(textContent.trim().replace('.', '').replace(',', '.'))
-}
+const parseNumber = (textContent: string): number =>
+  parseFloat(textContent.trim().replace('.', '').replace(',', '.'))
 
 const parseTable = (document: Document): DettaglioContributo[] => {
   const dettaglioContributi: DettaglioContributo[] = []
@@ -48,7 +61,7 @@ const parseTable = (document: Document): DettaglioContributo[] => {
       numeroQuote: parseNumber(columns.item(7)!.textContent!),
       valoreQuota: parseNumber(columns.item(8)!.textContent!),
       commissioni: parseNumber(columns.item(9)!.textContent!),
-    })    
+    })
   }
   return dettaglioContributi
 }
@@ -77,11 +90,10 @@ const getDettaglioContributi = async (): Promise<DettaglioContributoCumulato[]> 
     dettaglioContributi.push(...parseTable(document))
     lastPage = isLastPage(document)
   } while (!lastPage);
-  dettaglioContributiCached = dettaglioContributi
+
+  return dettaglioContributi
     .reverse()
     .reduce(toDettaglioContributiCumulati, [])
-
-  return dettaglioContributiCached
 }
 
 const callActionIsDettaglioContributiInit = async (pageNumber: number = 1): Promise<Document> => {

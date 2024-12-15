@@ -17,7 +17,7 @@ const mapToDataChart = (dettaglioContributi: DettaglioContributoCumulato[], hist
     ? dettaglioContributi[0]?.dataValuta || to
     : from
   const dates: Date[] = fromNormalized 
-    ? new Array(differenceInCalendarDays(to, fromNormalized))
+    ? new Array(differenceInCalendarDays(to, fromNormalized) + 1)
         .fill(null)
         .map((_, i) => addDays(fromNormalized, i))
     : []
@@ -48,7 +48,6 @@ const mapToDataChart = (dettaglioContributi: DettaglioContributoCumulato[], hist
             }
             return acc
           }, [])
-          .slice(-dates.length)
       },
       {
         label: 'Contributi',
@@ -58,7 +57,6 @@ const mapToDataChart = (dettaglioContributi: DettaglioContributoCumulato[], hist
             .filter(g => g.dataValuta.getTime() <= date.getTime())
             .reduce((acc, g) => acc > g.importoCumulato ? acc : g.importoCumulato, 0)
             )
-          .slice(-dates.length)
       },
     ]
   }
