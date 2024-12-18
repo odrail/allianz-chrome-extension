@@ -1,22 +1,23 @@
 import { formatDate, parseDate } from "../utils/dateUtils";
 
-enum Linea {
+export enum Linea {
   LINEA_FLESSIBILE_CON_GARANZIA_RESTITUZIONE_CAPITALE = "LINEA FLESSIBILE CON GARANZIA RESTITUZIONE CAPITALE",
   LINEA_OBBLIGAZIONARIA = "LINEA OBBLIGAZIONARIA",
   LINEA_BILANCIATA = "LINEA BILANCIATA",
-  LINEA_AZIONARIA = "LINEA AZIONARIA",
   LINEA_OBBLIGAZIONARIA_BREVE_TERMINE = "LINEA OBBLIGAZIONARIA BREVE TERMINE",
   LINEA_OBBLIGAZIONARIA_LUNGO_TERMINE = "LINEA OBBLIGAZIONARIA LUNGO TERMINE",
+  LINEA_MULTIASSET = "LINEA MULTIASSET",
+  LINEA_AZIONARIA = "LINEA AZIONARIA",
 }
 
-enum Tipologia {
+export enum Tipologia {
   VOLONTARIO = "Volontario",
   AZIENDALE = "Aziendale",
   INDIVIDUALE = "Individuale",
   TFR = "Tfr",
   TRASFERIMENTO_AZIENDALE = "Trasf. Aziend.",
   TRASFERIMENTO_INDIVIDUALE = "Trasf. Ind.",
-  TRASFERIMENTO_RENDITA = "Trasf. Rend.",
+  TRASFERIMENTO_RENDIMENTO = "Trasf. Rend.",
   TRASFERIMENTO_TFR_PREGRESSO = "Trasf. Tfr P.",
 }
 
@@ -26,24 +27,26 @@ export type DettaglioContributo = {
   tipologia: Tipologia;
   codiceAzienda: string;
   ragioneSociale: string;
-  importo: number;
+  importo: number | null;
   linea: Linea;
-  numeroQuote: number;
-  valoreQuota: number;
-  commissioni: number;
+  numeroQuote: number | null;
+  valoreQuota: number | null;
+  commissioni: number | null;
 }
 
-export interface DettaglioContributoCumulato extends DettaglioContributo {
-  importoCumulato: number,
-  numeroQuoteCumulate: number,
-  commissioniCumulate: number
-}
+export type DettaglioContributoCumulato = DettaglioContributo & {
+  [key in Linea]?: {
+    importoCumulato: number;
+    numeroQuoteCumulate: number;
+    commissioniCumulate: number;
+  };
+};
 
 const parseString = <T = string>(textContent: string): T =>
   textContent.trim() as T
 
-const parseNumber = (textContent: string): number =>
-  parseFloat(textContent.trim().replace('.', '').replace(',', '.'))
+const parseNumber = (textContent: string): number | null => 
+  parseFloat(textContent.trim().replace('.', '').replace(',', '.')) || null
 
 const parseTable = (document: Document): DettaglioContributo[] => {
   const dettaglioContributi: DettaglioContributo[] = []
@@ -70,11 +73,14 @@ const isLastPage = (document: Document): boolean =>
   document.querySelector('table[width="40%"] td:last-child')!.children.length === 0
 
 const toDettaglioContributiCumulati = (acc: DettaglioContributoCumulato[], dettaglioContributo: DettaglioContributo, index: number): DettaglioContributoCumulato[] => {
+  const linea = dettaglioContributo.linea
   acc.push({
     ...dettaglioContributo,
-    importoCumulato: index === 0 ? dettaglioContributo.importo : (dettaglioContributo.importo + acc[index - 1].importoCumulato),
-    numeroQuoteCumulate: index === 0 ? dettaglioContributo.numeroQuote : (dettaglioContributo.numeroQuote + acc[index - 1].numeroQuoteCumulate),
-    commissioniCumulate: index === 0 ? dettaglioContributo.commissioni : (dettaglioContributo.commissioni + acc[index - 1].commissioniCumulate),
+    [linea]: {
+      importoCumulato: index === 0 ? dettaglioContributo.importo : ((dettaglioContributo.importo || 0) + (acc[index - 1][linea]?.importoCumulato || 0)),
+      numeroQuoteCumulate: index === 0 ? dettaglioContributo.numeroQuote : ((dettaglioContributo.numeroQuote || 0) + (acc[index - 1][linea]?.numeroQuoteCumulate || 0)),
+      commissioniCumulate: index === 0 ? dettaglioContributo.commissioni : ((dettaglioContributo.commissioni || 0) + (acc[index - 1][linea]?.commissioniCumulate || 0)),
+    }
   })
   return acc
 }

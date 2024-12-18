@@ -1,15 +1,15 @@
 import React, { useMemo } from "react"
-import { DettaglioContributoCumulato } from "../../services/getDettaglioContributi"
+import { DettaglioContributoCumulato, Linea } from "../../services/getDettaglioContributi"
 import { formatCurrency, formatPercentage } from "../../utils/numberUtils"
-import { InvestmentData } from "investing-com-api"
 import { COLOR_AMOUNT, COLOR_CONTRIBUTION } from "../../utils/constants"
 import { closestIndexTo } from "date-fns"
 import Circle from "../Circle"
+import { HistoricalData } from "../../services/getHistoricalData"
 
 type SummaryProps = {
     from: Date | undefined
     dettaglioContributi: DettaglioContributoCumulato[]
-    historicalData: InvestmentData[]
+    historicalData: HistoricalData | undefined
 }
 
 const getGainStyle = (gain: number): React.CSSProperties => ({
@@ -33,24 +33,44 @@ const style: Record<string, React.CSSProperties> = {
 
 const SummaryPosition = ({ from, dettaglioContributi, historicalData }: SummaryProps): React.ReactNode => {
     const totaleContributi: number = useMemo(() => {
-        return dettaglioContributi.length > 0
-            ? dettaglioContributi[dettaglioContributi.length - 1].importoCumulato
-            : 0
+        if (dettaglioContributi.length === 0) return 0
+        return Object
+            .values(Linea)
+            .reduce((acc, linea) =>  acc + (dettaglioContributi[dettaglioContributi.length - 1][linea]?.importoCumulato || 0), 0)
+
     }, [dettaglioContributi])
 
     const montante: number = useMemo(() => {
-        const totQuote = dettaglioContributi.length > 0 ? dettaglioContributi[dettaglioContributi.length - 1].numeroQuoteCumulate : 0
-        const quotazione = historicalData.length > 0 ? historicalData[historicalData.length - 1].price_close : 0
-        return totQuote * quotazione
+        return Object
+            .values(Linea)
+            .reduce<number>((acc, linea) => {
+                if (dettaglioContributi.length === 0) return 0
+                const totQuote = dettaglioContributi[dettaglioContributi.length - 1][linea]?.numeroQuoteCumulate || 0
+                const investmentData =  historicalData && historicalData[linea]
+                const quotazione = investmentData && investmentData.length > 0 ? investmentData[investmentData.length - 1].price_close : 0
+                return acc + totQuote * quotazione
+            }, 0)
     }, [dettaglioContributi, historicalData])
 
     const timeWeightPercent: number = useMemo(() => {
-        if (historicalData.length === 0 || !from) return 0
-        const indexPrimaQuotazione = closestIndexTo(from, historicalData.map(h => h.date))
-        const primaQuotazione = historicalData[indexPrimaQuotazione!].price_close
-        const ultimaQuotazione = historicalData[historicalData.length - 1].price_close
-        return ultimaQuotazione / primaQuotazione - 1
-    }, [historicalData, from])    
+        const numeratore = Object
+            .values(Linea)
+            .reduce<number>((acc, linea) => {
+                if (!historicalData || !historicalData[linea] || historicalData[linea].length === 0 || !from) return 0
+                const indexPrimaQuotazione = closestIndexTo(from, historicalData![linea].map(h => h.date))
+                const primaQuotazione = historicalData![linea]![indexPrimaQuotazione!].price_close
+                const ultimaQuotazione = historicalData![linea]![historicalData![linea]!.length - 1].price_close
+                const totQuote = dettaglioContributi[dettaglioContributi.length - 1][linea]?.numeroQuoteCumulate || 0
+                return acc + (ultimaQuotazione / primaQuotazione - 1) * totQuote
+            }, 0)
+        const sommaPesi = Object
+            .values(Linea)
+            .reduce<number>((acc, linea) => {
+                if (!dettaglioContributi[dettaglioContributi.length - 1]) return 0
+                return acc + (dettaglioContributi[dettaglioContributi.length - 1][linea]?.numeroQuoteCumulate || 0)
+            }, 0)
+        return numeratore / (sommaPesi || 1)
+    }, [dettaglioContributi, historicalData, from])    
 
     const plusvalenza = useMemo(() => {
         return montante && totaleContributi ? montante - totaleContributi : 0
