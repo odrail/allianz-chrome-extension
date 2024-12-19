@@ -28,6 +28,7 @@ const mapToDataChart = (dettaglioContributi: DettaglioContributo[], historicalDa
       {
         label: 'Montante',
         color: COLOR_AMOUNT,
+        yAxisID: 'y1',
         values: dates
           .reduce<number[]>((acc, date) => {
             const montanteDelGiorno = Object
@@ -57,6 +58,7 @@ const mapToDataChart = (dettaglioContributi: DettaglioContributo[], historicalDa
       {
         label: 'Contributi Netti',
         color: COLOR_CONTRIBUTION,
+        yAxisID: 'y1',
         values: dates
           .map<number>(date => grouped
             .filter(g => g.dataValuta.getTime() <= date.getTime())
@@ -64,6 +66,17 @@ const mapToDataChart = (dettaglioContributi: DettaglioContributo[], historicalDa
               return acc > (g[Linea.LINEA_AZIONARIA]?.importoNettoCumulato || 0) ? acc : (g[Linea.LINEA_AZIONARIA]?.importoNettoCumulato || 0)
             }, 0))
       },
+      {
+        label: 'Quote',
+        color: 'red',
+        yAxisID: 'y2',
+        values: dates
+          .map<number>(date => grouped
+            .filter(g => g.dataValuta.getTime() <= date.getTime())
+            .reduce((acc, g) => {
+              return acc > (g[Linea.LINEA_AZIONARIA]?.numeroQuoteCumulate || 0) ? acc : (g[Linea.LINEA_AZIONARIA]?.numeroQuoteCumulate || 0)
+            }, 0))
+      }
     ]
   }
 }

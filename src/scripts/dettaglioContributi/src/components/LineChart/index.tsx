@@ -18,7 +18,8 @@ import { formatCurrency } from '../../utils/numberUtils';
 
 export type Dataset = {
   label: string
-  color: string
+  color: string  
+  yAxisID: string
   values:  number[]
 }
 
@@ -61,10 +62,14 @@ const options: ChartOptions<'line'> = {
     intersect: false,
   },
   scales: {
-    y: {
+    y1: {
       ticks: {
         callback: value => formatCurrency(parseFloat(value.toString()))
-      }
+      },
+      position: 'left'
+    },
+    y2: {
+      position: 'right'
     }
   }
 };
@@ -76,7 +81,8 @@ const getDataset = ({label, data}: {label: string, data: Dataset}): ChartDataset
     borderColor: data.color,
     backgroundColor: data.color,
     tension: 0.4,
-    pointRadius: 0
+    pointRadius: 0,
+    yAxisID: data.yAxisID
   }
 }
 
