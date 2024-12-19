@@ -1,5 +1,5 @@
 import React, { useMemo } from "react"
-import { DettaglioContributoCumulato, Linea } from "../../services/getDettaglioContributi"
+import { DettaglioContributo, Linea } from "../../services/getDettaglioContributi"
 import { formatCurrency, formatPercentage } from "../../utils/numberUtils"
 import { COLOR_AMOUNT, COLOR_CONTRIBUTION } from "../../utils/constants"
 import { closestIndexTo } from "date-fns"
@@ -8,7 +8,7 @@ import { HistoricalData } from "../../services/getHistoricalData"
 
 type SummaryProps = {
     from: Date | undefined
-    dettaglioContributi: DettaglioContributoCumulato[]
+    dettaglioContributi: DettaglioContributo[]
     historicalData: HistoricalData | undefined
 }
 
@@ -36,7 +36,7 @@ const SummaryPosition = ({ from, dettaglioContributi, historicalData }: SummaryP
         if (dettaglioContributi.length === 0) return 0
         return Object
             .values(Linea)
-            .reduce((acc, linea) =>  acc + (dettaglioContributi[dettaglioContributi.length - 1][linea]?.importoCumulato || 0), 0)
+            .reduce((acc, linea) =>  acc + (dettaglioContributi[dettaglioContributi.length - 1][linea]?.importoNettoCumulato || 0), 0)
 
     }, [dettaglioContributi])
 
@@ -92,7 +92,7 @@ const SummaryPosition = ({ from, dettaglioContributi, historicalData }: SummaryP
             <div>
                 <div style={style.title}>
                     <Circle color={COLOR_CONTRIBUTION} />
-                    Contribuiti
+                    Contribuiti Netti
                 </div>
                 <div>{formatCurrency(totaleContributi)}</div>
             </div>

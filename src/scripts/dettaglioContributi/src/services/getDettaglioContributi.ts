@@ -21,7 +21,7 @@ export enum Tipologia {
   TRASFERIMENTO_TFR_PREGRESSO = "Trasf. Tfr P.",
 }
 
-export type DettaglioContributo = {
+type TableRowDettaglioContributo = {
   dataCompetenza: Date;
   dataValuta: Date;
   tipologia: Tipologia;
@@ -34,9 +34,10 @@ export type DettaglioContributo = {
   commissioni: number | null;
 }
 
-export type DettaglioContributoCumulato = DettaglioContributo & {
+export type DettaglioContributo = TableRowDettaglioContributo & {
   [key in Linea]?: {
     importoCumulato: number;
+    importoNettoCumulato: number;
     numeroQuoteCumulate: number;
     commissioniCumulate: number;
   };
@@ -45,11 +46,14 @@ export type DettaglioContributoCumulato = DettaglioContributo & {
 const parseString = <T = string>(textContent: string): T =>
   textContent.trim() as T
 
-const parseNumber = (textContent: string): number | null => 
-  parseFloat(textContent.trim().replace('.', '').replace(',', '.')) || null
-
-const parseTable = (document: Document): DettaglioContributo[] => {
-  const dettaglioContributi: DettaglioContributo[] = []
+const parseNumber = (textContent: string): number | null => {
+  const number = parseFloat(textContent.trim().replace('.', '').replace(',', '.'))
+  return isNaN(number)
+    ? null
+    : number
+}
+const parseTable = (document: Document): TableRowDettaglioContributo[] => {
+  const dettaglioContributi: TableRowDettaglioContributo[] = []
   const rows = document.querySelector('.tabBody tbody')!.children
   for (let index = 2; index < rows.length; index++) {
     const columns = rows.item(index)!.children
@@ -72,22 +76,27 @@ const parseTable = (document: Document): DettaglioContributo[] => {
 const isLastPage = (document: Document): boolean => 
   document.querySelector('table[width="40%"] td:last-child')!.children.length === 0
 
-const toDettaglioContributiCumulati = (acc: DettaglioContributoCumulato[], dettaglioContributo: DettaglioContributo, index: number): DettaglioContributoCumulato[] => {
+const toDettaglioContributiCumulati = (acc: DettaglioContributo[], dettaglioContributo: TableRowDettaglioContributo, index: number): DettaglioContributo[] => {
   const linea = dettaglioContributo.linea
+  const importoCumulato = index === 0 ? dettaglioContributo.importo : ((dettaglioContributo.importo || 0) + (acc[index - 1][linea]?.importoCumulato || 0))
+  const numeroQuoteCumulate = index === 0 ? dettaglioContributo.numeroQuote : ((dettaglioContributo.numeroQuote || 0) + (acc[index - 1][linea]?.numeroQuoteCumulate || 0))
+  const commissioniCumulate = index === 0 ? dettaglioContributo.commissioni : ((dettaglioContributo.commissioni || 0) + (acc[index - 1][linea]?.commissioniCumulate || 0))
+  const importoNettoCumulato = importoCumulato !== null && commissioniCumulate !== null && (importoCumulato - commissioniCumulate)
   acc.push({
     ...dettaglioContributo,
     [linea]: {
-      importoCumulato: index === 0 ? dettaglioContributo.importo : ((dettaglioContributo.importo || 0) + (acc[index - 1][linea]?.importoCumulato || 0)),
-      numeroQuoteCumulate: index === 0 ? dettaglioContributo.numeroQuote : ((dettaglioContributo.numeroQuote || 0) + (acc[index - 1][linea]?.numeroQuoteCumulate || 0)),
-      commissioniCumulate: index === 0 ? dettaglioContributo.commissioni : ((dettaglioContributo.commissioni || 0) + (acc[index - 1][linea]?.commissioniCumulate || 0)),
+      importoCumulato,
+      importoNettoCumulato,
+      numeroQuoteCumulate,
+      commissioniCumulate,
     }
   })
   return acc
 }
 
-const getDettaglioContributi = async (): Promise<DettaglioContributoCumulato[]> => {
+const getDettaglioContributi = async (): Promise<DettaglioContributo[]> => {
 
-  const dettaglioContributi: DettaglioContributo[] = []
+  const dettaglioContributi: TableRowDettaglioContributo[] = []
   let pageNumber = 0
   let lastPage = false
   do {
